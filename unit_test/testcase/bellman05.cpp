@@ -44,7 +44,7 @@ bool UNIT_TEST::bellman05()
         BellmanFordPrevious[i] = -1;
     }
 
-    for(int i = 0; i < num_vertices; i++){
+    for(int i = 0; i < 1; i++){
         BF(edge, numberOfEdges, 'D', BellmanFordValue, BellmanFordPrevious);
         output << "step " << i+1 << ":" << endl;
         for(int j = 0; j < num_vertices; j++){

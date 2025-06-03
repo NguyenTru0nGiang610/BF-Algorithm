@@ -3,8 +3,9 @@
 
 void BF(int edge[][3], int numberOfEdges, char startVertex, int BellmanFordValue[], int BellmanFordPrevious[]) {
     static std::vector<char> nodes;
+    static std::vector<std::vector<int>> G;
     static bool initialized = false;
-
+    static bool firstCall = true;
     if (!initialized) {
         for (int i = 0; i < numberOfEdges; i++) {
             char u = edge[i][0];
@@ -14,24 +15,53 @@ void BF(int edge[][3], int numberOfEdges, char startVertex, int BellmanFordValue
             if (std::find(nodes.begin(), nodes.end(), v) == nodes.end())
                 nodes.push_back(v);
         }
+        int n = nodes.size();
+        G.assign(n, std::vector<int>(n, -1)); // -1 nghĩa là không có cạnh
+
+        for (int i = 0; i < numberOfEdges; ++i) {
+            int u = std::find(nodes.begin(), nodes.end(), edge[i][0]) - nodes.begin();
+            int v = std::find(nodes.begin(), nodes.end(), edge[i][1]) - nodes.begin();
+            G[u][v] = edge[i][2];
+        }
         initialized = true;
     }
 
     int startIdx = std::find(nodes.begin(), nodes.end(), startVertex) - nodes.begin();
-    if (BellmanFordValue[startIdx] == -1) {
+    int n = nodes.size();
+    if (firstCall) {
         BellmanFordValue[startIdx] = 0;
-    }
+        for (int i = 0; i < n; ++i) {
+            if (i == startIdx) continue;
+            if (G[startIdx][i] != -1) {
+                BellmanFordValue[i] = G[startIdx][i];
+                BellmanFordPrevious[i] = startIdx;
+            }
+        }
+        firstCall = false;
+    } else {
+        std::vector<int> tempValue(BellmanFordValue, BellmanFordValue + n);
 
-    for (int i = 0; i < numberOfEdges; i++) {
-        int u = std::find(nodes.begin(), nodes.end(), edge[i][0]) - nodes.begin();
-        int v = std::find(nodes.begin(), nodes.end(), edge[i][1]) - nodes.begin();
-        int wt = edge[i][2];
+        for (int u = 0; u < n; u++) {
+            int bestDist = tempValue[u];
+            int bestPrev = BellmanFordPrevious[u];
+            for (int v = 0; v < n; ++v) {
+                if (tempValue[v] != -1 && G[v][u] != -1) {
+                    int newDist = tempValue[v] + G[v][u];
+                    if (bestDist == -1 || newDist < bestDist ||
+                        (newDist == bestDist && nodes[v] < nodes[bestPrev])) {
+                        bestDist = newDist;
+                        bestPrev = v;
+                        }
+                }
+            }
 
-        if (BellmanFordValue[u] != -1 && (BellmanFordValue[v] == -1 || BellmanFordValue[u] + wt < BellmanFordValue[v])) {
-            BellmanFordValue[v] = BellmanFordValue[u] + wt;
-            BellmanFordPrevious[v] = u;
+            if (bestDist != tempValue[u]) {
+                BellmanFordValue[u] = bestDist;
+                BellmanFordPrevious[u] = bestPrev;
+            }
         }
     }
+
 }
 
 string BF_Path(int edge[][3], int numberOfEdges, char startVertex, char goalVertex) {
